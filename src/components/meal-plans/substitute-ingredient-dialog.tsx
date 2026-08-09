@@ -64,6 +64,7 @@ export function SubstituteIngredientDialog({ mealItemId, trigger }: { mealItemId
 
   function handleApply(index: number, alt: IngredientAlternativePreview) {
     setApplyingIndex(index);
+    setError(null);
     startTransition(async () => {
       const result = await applyIngredientSubstitutionAction(mealItemId, {
         description: alt.description,
@@ -72,6 +73,7 @@ export function SubstituteIngredientDialog({ mealItemId, trigger }: { mealItemId
       });
       setApplyingIndex(null);
       if (result.error) {
+        setError(result.error);
         toast.error(result.error);
       } else {
         toast.success("Ingredient replaced");
@@ -174,6 +176,7 @@ export function SubstituteIngredientDialog({ mealItemId, trigger }: { mealItemId
                 </CardContent>
               </Card>
             ))}
+            {error && <ErrorState description={error} />}
             <Button variant="ghost" size="sm" onClick={reset} className="w-full">
               Start over
             </Button>

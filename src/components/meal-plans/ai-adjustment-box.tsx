@@ -7,6 +7,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/shared/error-state";
 import { requestAiAdjustmentAction } from "@/lib/actions/meal-plan-adjustment";
 
 const EXAMPLES = [
@@ -19,13 +20,16 @@ const EXAMPLES = [
 
 export function AiAdjustmentBox({ planId }: { planId: string }) {
   const [instruction, setInstruction] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   function handleSubmit() {
+    setError(null);
     startTransition(async () => {
       const result = await requestAiAdjustmentAction(planId, instruction);
       if (result.error) {
+        setError(result.error);
         toast.error(result.error);
       } else if (result.newPlanId) {
         toast.success("Proposed changes are ready in a new draft — the original plan is unchanged.");
@@ -65,6 +69,7 @@ export function AiAdjustmentBox({ planId }: { planId: string }) {
             </button>
           ))}
         </div>
+        {error && <ErrorState description={error} onRetry={handleSubmit} />}
         <Button onClick={handleSubmit} disabled={isPending || instruction.trim().length < 5}>
           {isPending ? <Loader2 className="animate-spin" /> : <Sparkles />}
           {isPending ? "Generating proposed changes…" : "Propose changes"}

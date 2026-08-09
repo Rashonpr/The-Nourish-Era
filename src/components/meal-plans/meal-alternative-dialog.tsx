@@ -50,6 +50,7 @@ export function MealAlternativeDialog({ mealId, trigger }: { mealId: string; tri
 
   function handleApply(index: number, alt: MealAlternativePreview) {
     setApplyingIndex(index);
+    setError(null);
     startTransition(async () => {
       const result = await applyMealAlternativeAction(mealId, {
         name: alt.name,
@@ -59,6 +60,7 @@ export function MealAlternativeDialog({ mealId, trigger }: { mealId: string; tri
       });
       setApplyingIndex(null);
       if (result.error) {
+        setError(result.error);
         toast.error(result.error);
       } else {
         toast.success("Meal replaced");
@@ -157,6 +159,7 @@ export function MealAlternativeDialog({ mealId, trigger }: { mealId: string; tri
                 </CardContent>
               </Card>
             ))}
+            {error && <ErrorState description={error} />}
             <Button variant="ghost" size="sm" onClick={reset} className="w-full">
               Start over
             </Button>
