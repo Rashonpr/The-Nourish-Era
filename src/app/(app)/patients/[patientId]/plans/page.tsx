@@ -21,7 +21,7 @@ export default async function PatientPlansPage({ params }: { params: Promise<{ p
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" render={<Link href={`/meal-plans/new?patientId=${patientId}`} />}>
+        <Button size="sm" nativeButton={false} render={<Link href={`/meal-plans/new?patientId=${patientId}`} />}>
           <Plus />
           Create Meal Plan
         </Button>

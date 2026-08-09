@@ -29,7 +29,7 @@ export default async function MealPlansPage({
           <h1 className="font-heading text-2xl font-semibold text-foreground">Meal Plans</h1>
           <p className="mt-1 text-sm text-muted-foreground">Create, review, and export personalized meal plans.</p>
         </div>
-        <Button render={<Link href={patientId ? `/meal-plans/new?patientId=${patientId}` : "/meal-plans/new"} />}>
+        <Button nativeButton={false} render={<Link href={patientId ? `/meal-plans/new?patientId=${patientId}` : "/meal-plans/new"} />}>
           <Plus />
           Create Meal Plan
         </Button>
@@ -41,7 +41,7 @@ export default async function MealPlansPage({
           title="No meal plans yet"
           description="Create a plan once you've added a patient and set their nutrition targets."
           action={
-            <Button render={<Link href="/meal-plans/new" />}>
+            <Button nativeButton={false} render={<Link href="/meal-plans/new" />}>
               <Plus />
               Create Meal Plan
             </Button>

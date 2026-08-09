@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { fetchWithRetry } from "./fetch-with-retry";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/reset-password", "/update-password", "/auth"];
 
@@ -33,6 +34,7 @@ export async function updateSession(request: NextRequest) {
           }
         },
       },
+      global: { fetch: fetchWithRetry },
     },
   );
 

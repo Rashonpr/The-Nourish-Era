@@ -27,7 +27,7 @@ export function PlanHeader({ plan, patient }: { plan: MealPlanRow; patient: { id
           </Link>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <Button variant="outline" size="sm" render={<Link href={`/meal-plans/${plan.id}/grocery-list`} />}>
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/meal-plans/${plan.id}/grocery-list`} />}>
             <ShoppingCart />
             Grocery List
           </Button>

@@ -1,6 +1,10 @@
 -- TheNourishEra — initial schema
 -- Multi-tenant model: every row is reachable back to exactly one practitioner
 -- (auth.users.id). RLS enforces tenant isolation on every table below.
+--
+-- Idempotent: safe to run multiple times against the same database (e.g.
+-- after a partial failure) — every statement either uses IF NOT EXISTS,
+-- CREATE OR REPLACE, or a DROP ... IF EXISTS immediately before the CREATE.
 
 create extension if not exists pgcrypto;
 
@@ -20,7 +24,7 @@ $$;
 -- ============================================================================
 -- practitioners (1:1 with auth.users)
 -- ============================================================================
-create table public.practitioners (
+create table if not exists public.practitioners (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
   full_name text not null,
@@ -31,7 +35,7 @@ create table public.practitioners (
   updated_at timestamptz not null default now()
 );
 
-create trigger set_updated_at before update on public.practitioners
+create or replace trigger set_updated_at before update on public.practitioners
   for each row execute function public.set_updated_at();
 
 -- Auto-provision a practitioner row when someone signs up via Supabase Auth.
@@ -47,14 +51,14 @@ begin
 end;
 $$;
 
-create trigger on_auth_user_created
+create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
 -- ============================================================================
 -- patients
 -- ============================================================================
-create table public.patients (
+create table if not exists public.patients (
   id uuid primary key default gen_random_uuid(),
   practitioner_id uuid not null references public.practitioners(id) on delete cascade,
   first_name text not null,
@@ -76,16 +80,16 @@ create table public.patients (
   created_by uuid references public.practitioners(id)
 );
 
-create index patients_practitioner_id_idx on public.patients (practitioner_id);
-create index patients_status_idx on public.patients (practitioner_id, status);
+create index if not exists patients_practitioner_id_idx on public.patients (practitioner_id);
+create index if not exists patients_status_idx on public.patients (practitioner_id, status);
 
-create trigger set_updated_at before update on public.patients
+create or replace trigger set_updated_at before update on public.patients
   for each row execute function public.set_updated_at();
 
 -- ============================================================================
 -- Patient sub-records
 -- ============================================================================
-create table public.patient_allergies (
+create table if not exists public.patient_allergies (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   allergen text not null,
@@ -94,27 +98,27 @@ create table public.patient_allergies (
   notes text,
   created_at timestamptz not null default now()
 );
-create index patient_allergies_patient_id_idx on public.patient_allergies (patient_id);
+create index if not exists patient_allergies_patient_id_idx on public.patient_allergies (patient_id);
 
-create table public.patient_dietary_preferences (
+create table if not exists public.patient_dietary_preferences (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   preference text not null,
   is_custom boolean not null default false,
   created_at timestamptz not null default now()
 );
-create index patient_dietary_preferences_patient_id_idx on public.patient_dietary_preferences (patient_id);
+create index if not exists patient_dietary_preferences_patient_id_idx on public.patient_dietary_preferences (patient_id);
 
-create table public.patient_food_preferences (
+create table if not exists public.patient_food_preferences (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   category text not null check (category in ('favorite', 'dislike', 'refuse')),
   food_name text not null,
   created_at timestamptz not null default now()
 );
-create index patient_food_preferences_patient_id_idx on public.patient_food_preferences (patient_id);
+create index if not exists patient_food_preferences_patient_id_idx on public.patient_food_preferences (patient_id);
 
-create table public.patient_lifestyle (
+create table if not exists public.patient_lifestyle (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null unique references public.patients(id) on delete cascade,
   meals_per_day integer,
@@ -129,10 +133,10 @@ create table public.patient_lifestyle (
   updated_at timestamptz not null default now()
 );
 
-create trigger set_updated_at before update on public.patient_lifestyle
+create or replace trigger set_updated_at before update on public.patient_lifestyle
   for each row execute function public.set_updated_at();
 
-create table public.patient_conditions (
+create table if not exists public.patient_conditions (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   condition text not null,
@@ -140,24 +144,24 @@ create table public.patient_conditions (
   notes text,
   created_at timestamptz not null default now()
 );
-create index patient_conditions_patient_id_idx on public.patient_conditions (patient_id);
+create index if not exists patient_conditions_patient_id_idx on public.patient_conditions (patient_id);
 
-create table public.patient_medications (
+create table if not exists public.patient_medications (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   notes text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index patient_medications_patient_id_idx on public.patient_medications (patient_id);
+create index if not exists patient_medications_patient_id_idx on public.patient_medications (patient_id);
 
-create trigger set_updated_at before update on public.patient_medications
+create or replace trigger set_updated_at before update on public.patient_medications
   for each row execute function public.set_updated_at();
 
 -- ============================================================================
 -- nutrition_targets — history-preserving; only one active row per patient
 -- ============================================================================
-create table public.nutrition_targets (
+create table if not exists public.nutrition_targets (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   calories integer,
@@ -178,17 +182,17 @@ create table public.nutrition_targets (
   created_by uuid references public.practitioners(id)
 );
 
-create index nutrition_targets_patient_id_idx on public.nutrition_targets (patient_id);
-create unique index nutrition_targets_one_active_per_patient
+create index if not exists nutrition_targets_patient_id_idx on public.nutrition_targets (patient_id);
+create unique index if not exists nutrition_targets_one_active_per_patient
   on public.nutrition_targets (patient_id) where (is_active);
 
-create trigger set_updated_at before update on public.nutrition_targets
+create or replace trigger set_updated_at before update on public.nutrition_targets
   for each row execute function public.set_updated_at();
 
 -- ============================================================================
 -- foods + nutrition_data — shared USDA FoodData Central cache
 -- ============================================================================
-create table public.foods (
+create table if not exists public.foods (
   id uuid primary key default gen_random_uuid(),
   fdc_id integer unique,
   description text not null,
@@ -202,9 +206,9 @@ create table public.foods (
   last_synced_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );
-create index foods_description_idx on public.foods using gin (to_tsvector('english', description));
+create index if not exists foods_description_idx on public.foods using gin (to_tsvector('english', description));
 
-create table public.nutrition_data (
+create table if not exists public.nutrition_data (
   id uuid primary key default gen_random_uuid(),
   food_id uuid not null references public.foods(id) on delete cascade,
   nutrient_id integer,
@@ -214,12 +218,12 @@ create table public.nutrition_data (
   created_at timestamptz not null default now(),
   unique (food_id, nutrient_name)
 );
-create index nutrition_data_food_id_idx on public.nutrition_data (food_id);
+create index if not exists nutrition_data_food_id_idx on public.nutrition_data (food_id);
 
 -- ============================================================================
 -- templates (practitioner-owned, not patient-specific)
 -- ============================================================================
-create table public.templates (
+create table if not exists public.templates (
   id uuid primary key default gen_random_uuid(),
   practitioner_id uuid not null references public.practitioners(id) on delete cascade,
   name text not null,
@@ -232,20 +236,20 @@ create table public.templates (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index templates_practitioner_id_idx on public.templates (practitioner_id);
+create index if not exists templates_practitioner_id_idx on public.templates (practitioner_id);
 
-create trigger set_updated_at before update on public.templates
+create or replace trigger set_updated_at before update on public.templates
   for each row execute function public.set_updated_at();
 
-create table public.template_days (
+create table if not exists public.template_days (
   id uuid primary key default gen_random_uuid(),
   template_id uuid not null references public.templates(id) on delete cascade,
   day_number integer not null,
   unique (template_id, day_number)
 );
-create index template_days_template_id_idx on public.template_days (template_id);
+create index if not exists template_days_template_id_idx on public.template_days (template_id);
 
-create table public.template_meals (
+create table if not exists public.template_meals (
   id uuid primary key default gen_random_uuid(),
   template_day_id uuid not null references public.template_days(id) on delete cascade,
   meal_type text not null check (meal_type in ('breakfast', 'lunch', 'dinner', 'snack', 'other')),
@@ -254,9 +258,9 @@ create table public.template_meals (
   prep_instructions text,
   servings numeric not null default 1
 );
-create index template_meals_template_day_id_idx on public.template_meals (template_day_id);
+create index if not exists template_meals_template_day_id_idx on public.template_meals (template_day_id);
 
-create table public.template_meal_items (
+create table if not exists public.template_meal_items (
   id uuid primary key default gen_random_uuid(),
   template_meal_id uuid not null references public.template_meals(id) on delete cascade,
   food_id uuid references public.foods(id),
@@ -272,12 +276,12 @@ create table public.template_meal_items (
   nutrition_source text not null default 'usda' check (nutrition_source in ('usda', 'manual', 'ai_unverified')),
   position integer not null default 0
 );
-create index template_meal_items_template_meal_id_idx on public.template_meal_items (template_meal_id);
+create index if not exists template_meal_items_template_meal_id_idx on public.template_meal_items (template_meal_id);
 
 -- ============================================================================
 -- meal_plans / meal_plan_days / meals / meal_items
 -- ============================================================================
-create table public.meal_plans (
+create table if not exists public.meal_plans (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   practitioner_id uuid not null references public.practitioners(id) on delete cascade,
@@ -299,14 +303,14 @@ create table public.meal_plans (
   approved_at timestamptz,
   approved_by uuid references public.practitioners(id)
 );
-create index meal_plans_patient_id_idx on public.meal_plans (patient_id);
-create index meal_plans_practitioner_id_idx on public.meal_plans (practitioner_id);
-create index meal_plans_status_idx on public.meal_plans (practitioner_id, status);
+create index if not exists meal_plans_patient_id_idx on public.meal_plans (patient_id);
+create index if not exists meal_plans_practitioner_id_idx on public.meal_plans (practitioner_id);
+create index if not exists meal_plans_status_idx on public.meal_plans (practitioner_id, status);
 
-create trigger set_updated_at before update on public.meal_plans
+create or replace trigger set_updated_at before update on public.meal_plans
   for each row execute function public.set_updated_at();
 
-create table public.meal_plan_days (
+create table if not exists public.meal_plan_days (
   id uuid primary key default gen_random_uuid(),
   meal_plan_id uuid not null references public.meal_plans(id) on delete cascade,
   day_number integer not null,
@@ -315,9 +319,9 @@ create table public.meal_plan_days (
   created_at timestamptz not null default now(),
   unique (meal_plan_id, day_number)
 );
-create index meal_plan_days_meal_plan_id_idx on public.meal_plan_days (meal_plan_id);
+create index if not exists meal_plan_days_meal_plan_id_idx on public.meal_plan_days (meal_plan_id);
 
-create table public.meals (
+create table if not exists public.meals (
   id uuid primary key default gen_random_uuid(),
   meal_plan_day_id uuid not null references public.meal_plan_days(id) on delete cascade,
   meal_type text not null check (meal_type in ('breakfast', 'lunch', 'dinner', 'snack', 'other')),
@@ -330,12 +334,12 @@ create table public.meals (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index meals_meal_plan_day_id_idx on public.meals (meal_plan_day_id);
+create index if not exists meals_meal_plan_day_id_idx on public.meals (meal_plan_day_id);
 
-create trigger set_updated_at before update on public.meals
+create or replace trigger set_updated_at before update on public.meals
   for each row execute function public.set_updated_at();
 
-create table public.meal_items (
+create table if not exists public.meal_items (
   id uuid primary key default gen_random_uuid(),
   meal_id uuid not null references public.meals(id) on delete cascade,
   food_id uuid references public.foods(id),
@@ -353,16 +357,16 @@ create table public.meal_items (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index meal_items_meal_id_idx on public.meal_items (meal_id);
-create index meal_items_food_id_idx on public.meal_items (food_id);
+create index if not exists meal_items_meal_id_idx on public.meal_items (meal_id);
+create index if not exists meal_items_food_id_idx on public.meal_items (food_id);
 
-create trigger set_updated_at before update on public.meal_items
+create or replace trigger set_updated_at before update on public.meal_items
   for each row execute function public.set_updated_at();
 
 -- ============================================================================
 -- grocery_lists / grocery_list_items
 -- ============================================================================
-create table public.grocery_lists (
+create table if not exists public.grocery_lists (
   id uuid primary key default gen_random_uuid(),
   meal_plan_id uuid not null unique references public.meal_plans(id) on delete cascade,
   generated_at timestamptz not null default now(),
@@ -370,10 +374,10 @@ create table public.grocery_lists (
   updated_at timestamptz not null default now()
 );
 
-create trigger set_updated_at before update on public.grocery_lists
+create or replace trigger set_updated_at before update on public.grocery_lists
   for each row execute function public.set_updated_at();
 
-create table public.grocery_list_items (
+create table if not exists public.grocery_list_items (
   id uuid primary key default gen_random_uuid(),
   grocery_list_id uuid not null references public.grocery_lists(id) on delete cascade,
   category text not null default 'other' check (
@@ -386,12 +390,12 @@ create table public.grocery_list_items (
   is_manual boolean not null default false,
   position integer not null default 0
 );
-create index grocery_list_items_grocery_list_id_idx on public.grocery_list_items (grocery_list_id);
+create index if not exists grocery_list_items_grocery_list_id_idx on public.grocery_list_items (grocery_list_id);
 
 -- ============================================================================
 -- progress_entries
 -- ============================================================================
-create table public.progress_entries (
+create table if not exists public.progress_entries (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   entry_date date not null,
@@ -405,12 +409,12 @@ create table public.progress_entries (
   created_by uuid references public.practitioners(id),
   unique (patient_id, entry_date)
 );
-create index progress_entries_patient_id_idx on public.progress_entries (patient_id, entry_date);
+create index if not exists progress_entries_patient_id_idx on public.progress_entries (patient_id, entry_date);
 
 -- ============================================================================
 -- practitioner_notes
 -- ============================================================================
-create table public.practitioner_notes (
+create table if not exists public.practitioner_notes (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients(id) on delete cascade,
   practitioner_id uuid not null references public.practitioners(id) on delete cascade,
@@ -418,15 +422,15 @@ create table public.practitioner_notes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index practitioner_notes_patient_id_idx on public.practitioner_notes (patient_id);
+create index if not exists practitioner_notes_patient_id_idx on public.practitioner_notes (patient_id);
 
-create trigger set_updated_at before update on public.practitioner_notes
+create or replace trigger set_updated_at before update on public.practitioner_notes
   for each row execute function public.set_updated_at();
 
 -- ============================================================================
 -- ai_generations — audit trail for AI activity (no raw PHI-bearing prompts)
 -- ============================================================================
-create table public.ai_generations (
+create table if not exists public.ai_generations (
   id uuid primary key default gen_random_uuid(),
   practitioner_id uuid not null references public.practitioners(id) on delete cascade,
   patient_id uuid references public.patients(id) on delete set null,
@@ -443,11 +447,11 @@ create table public.ai_generations (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index ai_generations_practitioner_id_idx on public.ai_generations (practitioner_id);
-create index ai_generations_patient_id_idx on public.ai_generations (patient_id);
-create index ai_generations_meal_plan_id_idx on public.ai_generations (meal_plan_id);
+create index if not exists ai_generations_practitioner_id_idx on public.ai_generations (practitioner_id);
+create index if not exists ai_generations_patient_id_idx on public.ai_generations (patient_id);
+create index if not exists ai_generations_meal_plan_id_idx on public.ai_generations (meal_plan_id);
 
-create trigger set_updated_at before update on public.ai_generations
+create or replace trigger set_updated_at before update on public.ai_generations
   for each row execute function public.set_updated_at();
 
 -- ============================================================================
@@ -569,14 +573,21 @@ alter table public.practitioner_notes enable row level security;
 alter table public.ai_generations enable row level security;
 
 -- practitioners
+drop policy if exists "practitioners_select_own" on public.practitioners;
 create policy "practitioners_select_own" on public.practitioners for select using (id = auth.uid());
+drop policy if exists "practitioners_update_own" on public.practitioners;
 create policy "practitioners_update_own" on public.practitioners for update using (id = auth.uid());
+drop policy if exists "practitioners_insert_own" on public.practitioners;
 create policy "practitioners_insert_own" on public.practitioners for insert with check (id = auth.uid());
 
 -- patients
+drop policy if exists "patients_select_own" on public.patients;
 create policy "patients_select_own" on public.patients for select using (practitioner_id = auth.uid());
+drop policy if exists "patients_insert_own" on public.patients;
 create policy "patients_insert_own" on public.patients for insert with check (practitioner_id = auth.uid());
+drop policy if exists "patients_update_own" on public.patients;
 create policy "patients_update_own" on public.patients for update using (practitioner_id = auth.uid());
+drop policy if exists "patients_delete_own" on public.patients;
 create policy "patients_delete_own" on public.patients for delete using (practitioner_id = auth.uid());
 
 -- generic policy generator for simple patient-child tables
@@ -590,18 +601,22 @@ begin
     'nutrition_targets', 'progress_entries'
   ]
   loop
+    execute format('drop policy if exists "%1$s_select" on public.%1$s;', t);
     execute format(
       'create policy "%1$s_select" on public.%1$s for select using (public.is_patient_owner(patient_id));',
       t
     );
+    execute format('drop policy if exists "%1$s_insert" on public.%1$s;', t);
     execute format(
       'create policy "%1$s_insert" on public.%1$s for insert with check (public.is_patient_owner(patient_id));',
       t
     );
+    execute format('drop policy if exists "%1$s_update" on public.%1$s;', t);
     execute format(
       'create policy "%1$s_update" on public.%1$s for update using (public.is_patient_owner(patient_id));',
       t
     );
+    execute format('drop policy if exists "%1$s_delete" on public.%1$s;', t);
     execute format(
       'create policy "%1$s_delete" on public.%1$s for delete using (public.is_patient_owner(patient_id));',
       t
@@ -610,74 +625,127 @@ begin
 end $$;
 
 -- practitioner_notes (patient-scoped, but also carries practitioner_id directly)
+drop policy if exists "practitioner_notes_select" on public.practitioner_notes;
 create policy "practitioner_notes_select" on public.practitioner_notes for select using (public.is_patient_owner(patient_id));
+drop policy if exists "practitioner_notes_insert" on public.practitioner_notes;
 create policy "practitioner_notes_insert" on public.practitioner_notes for insert with check (public.is_patient_owner(patient_id) and practitioner_id = auth.uid());
+drop policy if exists "practitioner_notes_update" on public.practitioner_notes;
 create policy "practitioner_notes_update" on public.practitioner_notes for update using (public.is_patient_owner(patient_id));
+drop policy if exists "practitioner_notes_delete" on public.practitioner_notes;
 create policy "practitioner_notes_delete" on public.practitioner_notes for delete using (public.is_patient_owner(patient_id));
 
 -- foods / nutrition_data: shared reference cache — readable/writable by any
 -- authenticated practitioner, never tenant-scoped.
+drop policy if exists "foods_select_authenticated" on public.foods;
 create policy "foods_select_authenticated" on public.foods for select to authenticated using (true);
+drop policy if exists "foods_insert_authenticated" on public.foods;
 create policy "foods_insert_authenticated" on public.foods for insert to authenticated with check (true);
+drop policy if exists "foods_update_authenticated" on public.foods;
 create policy "foods_update_authenticated" on public.foods for update to authenticated using (true);
 
+drop policy if exists "nutrition_data_select_authenticated" on public.nutrition_data;
 create policy "nutrition_data_select_authenticated" on public.nutrition_data for select to authenticated using (true);
+drop policy if exists "nutrition_data_insert_authenticated" on public.nutrition_data;
 create policy "nutrition_data_insert_authenticated" on public.nutrition_data for insert to authenticated with check (true);
+drop policy if exists "nutrition_data_update_authenticated" on public.nutrition_data;
 create policy "nutrition_data_update_authenticated" on public.nutrition_data for update to authenticated using (true);
 
 -- templates
+drop policy if exists "templates_select_own" on public.templates;
 create policy "templates_select_own" on public.templates for select using (practitioner_id = auth.uid());
+drop policy if exists "templates_insert_own" on public.templates;
 create policy "templates_insert_own" on public.templates for insert with check (practitioner_id = auth.uid());
+drop policy if exists "templates_update_own" on public.templates;
 create policy "templates_update_own" on public.templates for update using (practitioner_id = auth.uid());
+drop policy if exists "templates_delete_own" on public.templates;
 create policy "templates_delete_own" on public.templates for delete using (practitioner_id = auth.uid());
 
+drop policy if exists "template_days_select" on public.template_days;
 create policy "template_days_select" on public.template_days for select using (public.is_template_owner(template_id));
+drop policy if exists "template_days_insert" on public.template_days;
 create policy "template_days_insert" on public.template_days for insert with check (public.is_template_owner(template_id));
+drop policy if exists "template_days_update" on public.template_days;
 create policy "template_days_update" on public.template_days for update using (public.is_template_owner(template_id));
+drop policy if exists "template_days_delete" on public.template_days;
 create policy "template_days_delete" on public.template_days for delete using (public.is_template_owner(template_id));
 
+drop policy if exists "template_meals_select" on public.template_meals;
 create policy "template_meals_select" on public.template_meals for select using (public.is_template_day_owner(template_day_id));
+drop policy if exists "template_meals_insert" on public.template_meals;
 create policy "template_meals_insert" on public.template_meals for insert with check (public.is_template_day_owner(template_day_id));
+drop policy if exists "template_meals_update" on public.template_meals;
 create policy "template_meals_update" on public.template_meals for update using (public.is_template_day_owner(template_day_id));
+drop policy if exists "template_meals_delete" on public.template_meals;
 create policy "template_meals_delete" on public.template_meals for delete using (public.is_template_day_owner(template_day_id));
 
+drop policy if exists "template_meal_items_select" on public.template_meal_items;
 create policy "template_meal_items_select" on public.template_meal_items for select using (public.is_template_meal_owner(template_meal_id));
+drop policy if exists "template_meal_items_insert" on public.template_meal_items;
 create policy "template_meal_items_insert" on public.template_meal_items for insert with check (public.is_template_meal_owner(template_meal_id));
+drop policy if exists "template_meal_items_update" on public.template_meal_items;
 create policy "template_meal_items_update" on public.template_meal_items for update using (public.is_template_meal_owner(template_meal_id));
+drop policy if exists "template_meal_items_delete" on public.template_meal_items;
 create policy "template_meal_items_delete" on public.template_meal_items for delete using (public.is_template_meal_owner(template_meal_id));
 
 -- meal_plans
+drop policy if exists "meal_plans_select_own" on public.meal_plans;
 create policy "meal_plans_select_own" on public.meal_plans for select using (practitioner_id = auth.uid());
+drop policy if exists "meal_plans_insert_own" on public.meal_plans;
 create policy "meal_plans_insert_own" on public.meal_plans for insert with check (practitioner_id = auth.uid());
+drop policy if exists "meal_plans_update_own" on public.meal_plans;
 create policy "meal_plans_update_own" on public.meal_plans for update using (practitioner_id = auth.uid());
+drop policy if exists "meal_plans_delete_own" on public.meal_plans;
 create policy "meal_plans_delete_own" on public.meal_plans for delete using (practitioner_id = auth.uid());
 
+drop policy if exists "meal_plan_days_select" on public.meal_plan_days;
 create policy "meal_plan_days_select" on public.meal_plan_days for select using (public.is_meal_plan_owner(meal_plan_id));
+drop policy if exists "meal_plan_days_insert" on public.meal_plan_days;
 create policy "meal_plan_days_insert" on public.meal_plan_days for insert with check (public.is_meal_plan_owner(meal_plan_id));
+drop policy if exists "meal_plan_days_update" on public.meal_plan_days;
 create policy "meal_plan_days_update" on public.meal_plan_days for update using (public.is_meal_plan_owner(meal_plan_id));
+drop policy if exists "meal_plan_days_delete" on public.meal_plan_days;
 create policy "meal_plan_days_delete" on public.meal_plan_days for delete using (public.is_meal_plan_owner(meal_plan_id));
 
+drop policy if exists "meals_select" on public.meals;
 create policy "meals_select" on public.meals for select using (public.is_meal_plan_day_owner(meal_plan_day_id));
+drop policy if exists "meals_insert" on public.meals;
 create policy "meals_insert" on public.meals for insert with check (public.is_meal_plan_day_owner(meal_plan_day_id));
+drop policy if exists "meals_update" on public.meals;
 create policy "meals_update" on public.meals for update using (public.is_meal_plan_day_owner(meal_plan_day_id));
+drop policy if exists "meals_delete" on public.meals;
 create policy "meals_delete" on public.meals for delete using (public.is_meal_plan_day_owner(meal_plan_day_id));
 
+drop policy if exists "meal_items_select" on public.meal_items;
 create policy "meal_items_select" on public.meal_items for select using (public.is_meal_owner(meal_id));
+drop policy if exists "meal_items_insert" on public.meal_items;
 create policy "meal_items_insert" on public.meal_items for insert with check (public.is_meal_owner(meal_id));
+drop policy if exists "meal_items_update" on public.meal_items;
 create policy "meal_items_update" on public.meal_items for update using (public.is_meal_owner(meal_id));
+drop policy if exists "meal_items_delete" on public.meal_items;
 create policy "meal_items_delete" on public.meal_items for delete using (public.is_meal_owner(meal_id));
 
+drop policy if exists "grocery_lists_select" on public.grocery_lists;
 create policy "grocery_lists_select" on public.grocery_lists for select using (public.is_meal_plan_owner(meal_plan_id));
+drop policy if exists "grocery_lists_insert" on public.grocery_lists;
 create policy "grocery_lists_insert" on public.grocery_lists for insert with check (public.is_meal_plan_owner(meal_plan_id));
+drop policy if exists "grocery_lists_update" on public.grocery_lists;
 create policy "grocery_lists_update" on public.grocery_lists for update using (public.is_meal_plan_owner(meal_plan_id));
+drop policy if exists "grocery_lists_delete" on public.grocery_lists;
 create policy "grocery_lists_delete" on public.grocery_lists for delete using (public.is_meal_plan_owner(meal_plan_id));
 
+drop policy if exists "grocery_list_items_select" on public.grocery_list_items;
 create policy "grocery_list_items_select" on public.grocery_list_items for select using (public.is_grocery_list_owner(grocery_list_id));
+drop policy if exists "grocery_list_items_insert" on public.grocery_list_items;
 create policy "grocery_list_items_insert" on public.grocery_list_items for insert with check (public.is_grocery_list_owner(grocery_list_id));
+drop policy if exists "grocery_list_items_update" on public.grocery_list_items;
 create policy "grocery_list_items_update" on public.grocery_list_items for update using (public.is_grocery_list_owner(grocery_list_id));
+drop policy if exists "grocery_list_items_delete" on public.grocery_list_items;
 create policy "grocery_list_items_delete" on public.grocery_list_items for delete using (public.is_grocery_list_owner(grocery_list_id));
 
 -- ai_generations
+drop policy if exists "ai_generations_select_own" on public.ai_generations;
 create policy "ai_generations_select_own" on public.ai_generations for select using (practitioner_id = auth.uid());
+drop policy if exists "ai_generations_insert_own" on public.ai_generations;
 create policy "ai_generations_insert_own" on public.ai_generations for insert with check (practitioner_id = auth.uid());
+drop policy if exists "ai_generations_update_own" on public.ai_generations;
 create policy "ai_generations_update_own" on public.ai_generations for update using (practitioner_id = auth.uid());

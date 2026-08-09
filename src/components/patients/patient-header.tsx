@@ -33,7 +33,7 @@ export function PatientHeader({ patient }: { patient: PatientRow }) {
           {metaParts.length > 0 && <span className="text-sm text-muted-foreground">{metaParts.join(" · ")}</span>}
         </div>
         <div className="flex gap-2.5">
-          <Button variant="outline" render={<Link href={`/patients/${patient.id}/edit`} />}>
+          <Button variant="outline" nativeButton={false} render={<Link href={`/patients/${patient.id}/edit`} />}>
             <Pencil />
             Edit
           </Button>

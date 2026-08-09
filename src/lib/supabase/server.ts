@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { fetchWithRetry } from "./fetch-with-retry";
 import type { Database } from "@/types/database";
 
 /**
@@ -30,6 +31,7 @@ export async function createClient() {
           }
         },
       },
+      global: { fetch: fetchWithRetry },
     },
   );
 }
@@ -51,6 +53,7 @@ export function createServiceRoleClient() {
         },
         setAll() {},
       },
+      global: { fetch: fetchWithRetry },
     },
   );
 }

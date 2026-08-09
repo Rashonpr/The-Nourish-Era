@@ -34,7 +34,7 @@ export default async function PatientsPage({
           <h1 className="font-heading text-2xl font-semibold text-foreground">Patients</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your patient roster and their nutrition plans.</p>
         </div>
-        <Button render={<Link href="/patients/new" />}>
+        <Button nativeButton={false} render={<Link href="/patients/new" />}>
           <UserPlus />
           Add Patient
         </Button>
@@ -53,7 +53,7 @@ export default async function PatientsPage({
             title="No patients yet"
             description="Add your first patient to start building personalized nutrition plans."
             action={
-              <Button render={<Link href="/patients/new" />}>
+              <Button nativeButton={false} render={<Link href="/patients/new" />}>
                 <UserPlus />
                 Add Patient
               </Button>

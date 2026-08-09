@@ -42,7 +42,7 @@ export default async function NewMealPlanPage({
           title="Add a patient first"
           description="You need at least one active patient before you can create a meal plan."
           action={
-            <Button render={<Link href="/patients/new" />}>Add Patient</Button>
+            <Button nativeButton={false} render={<Link href="/patients/new" />}>Add Patient</Button>
           }
         />
       ) : (

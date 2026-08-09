@@ -255,7 +255,7 @@ export default async function PatientOverviewPage({ params }: { params: Promise<
             {!activeNutritionTarget ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">No targets set yet.</p>
-                <Button size="sm" render={<Link href={`/patients/${patientId}/targets`} />}>
+                <Button size="sm" nativeButton={false} render={<Link href={`/patients/${patientId}/targets`} />}>
                   Set targets
                 </Button>
               </div>
@@ -277,7 +277,7 @@ export default async function PatientOverviewPage({ params }: { params: Promise<
                   <dt className="text-muted-foreground">Fat</dt>
                   <dd className="font-medium text-foreground">{activeNutritionTarget.fat_g ?? "—"} g</dd>
                 </div>
-                <Button size="sm" variant="outline" className="w-full" render={<Link href={`/patients/${patientId}/targets`} />}>
+                <Button size="sm" variant="outline" className="w-full" nativeButton={false} render={<Link href={`/patients/${patientId}/targets`} />}>
                   Edit targets
                 </Button>
               </dl>

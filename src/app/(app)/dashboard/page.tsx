@@ -29,11 +29,11 @@ export default async function DashboardPage() {
           <p className="mt-1 text-sm text-muted-foreground">Here&apos;s what&apos;s happening with your patients.</p>
         </div>
         <div className="flex gap-2.5">
-          <Button variant="outline" render={<Link href="/patients/new" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/patients/new" />}>
             <UserPlus />
             Add Patient
           </Button>
-          <Button render={<Link href="/meal-plans" />}>
+          <Button nativeButton={false} render={<Link href="/meal-plans" />}>
             <Plus />
             Create Meal Plan
           </Button>
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Recently edited patients</CardTitle>
-            <Button variant="ghost" size="sm" render={<Link href="/patients" />}>
+            <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/patients" />}>
               View all
               <ChevronRight />
             </Button>
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
                 title="No patients yet"
                 description="Add your first patient to start building nutrition plans."
                 action={
-                  <Button size="sm" render={<Link href="/patients/new" />}>
+                  <Button size="sm" nativeButton={false} render={<Link href="/patients/new" />}>
                     <UserPlus />
                     Add Patient
                   </Button>
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Recent meal plans</CardTitle>
-            <Button variant="ghost" size="sm" render={<Link href="/meal-plans" />}>
+            <Button variant="ghost" size="sm" nativeButton={false} render={<Link href="/meal-plans" />}>
               View all
               <ChevronRight />
             </Button>

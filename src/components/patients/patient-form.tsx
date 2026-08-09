@@ -148,7 +148,7 @@ export function PatientForm({
                 control={control}
                 name="sex"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select…" />
                     </SelectTrigger>
@@ -245,7 +245,7 @@ export function PatientForm({
               control={control}
               name="activityLevel"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
@@ -273,7 +273,7 @@ export function PatientForm({
             control={control}
             name="primaryGoal"
             render={({ field }) => (
-              <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2.5 sm:grid-cols-2">
+              <RadioGroup value={field.value ?? ""} onValueChange={field.onChange} className="grid gap-2.5 sm:grid-cols-2">
                 {PRIMARY_GOALS.map((goal) => (
                   <label key={goal} className="flex items-center gap-2 text-sm">
                     <RadioGroupItem value={goal} /> {goal}
@@ -403,7 +403,7 @@ export function PatientForm({
               control={control}
               name="cookingAbility"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
@@ -428,7 +428,7 @@ export function PatientForm({
               control={control}
               name="budgetLevel"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
