@@ -18,7 +18,7 @@ export function ProfileForm({ practitioner }: { practitioner: Practitioner }) {
   }, [state.success]);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form key={practitioner.updated_at} action={formAction} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="fullName">Full name</Label>
