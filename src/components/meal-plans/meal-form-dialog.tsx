@@ -90,7 +90,7 @@ export function MealFormDialog(props: MealFormDialogProps) {
           <div className="flex gap-3">
             <div className="flex-1 space-y-1.5">
               <Label>Meal type</Label>
-              <Select value={mealType} onValueChange={(v) => v && setMealType(v as MealType)}>
+              <Select value={mealType} onValueChange={(v) => v && setMealType(v as MealType)} items={MEAL_TYPES}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>

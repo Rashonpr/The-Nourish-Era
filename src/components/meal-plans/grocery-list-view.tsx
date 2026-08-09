@@ -142,7 +142,11 @@ export function GroceryListView({
               <Input placeholder="Unit" value={newItem.unit} onChange={(e) => setNewItem((p) => ({ ...p, unit: e.target.value }))} />
             </div>
             <div className="w-44 space-y-1.5">
-              <Select value={newItem.category} onValueChange={(v) => v && setNewItem((p) => ({ ...p, category: v as GroceryCategory }))}>
+              <Select
+                value={newItem.category}
+                onValueChange={(v) => v && setNewItem((p) => ({ ...p, category: v as GroceryCategory }))}
+                items={CATEGORY_LABELS}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>

@@ -99,7 +99,7 @@ export function SubstituteIngredientDialog({ mealItemId, trigger }: { mealItemId
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Reason</Label>
-              <Select value={reason} onValueChange={(v) => v && setReason(v as SubstitutionReason)}>
+              <Select value={reason} onValueChange={(v) => v && setReason(v as SubstitutionReason)} items={SUBSTITUTION_REASONS}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>

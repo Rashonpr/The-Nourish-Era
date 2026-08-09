@@ -21,6 +21,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TagInput } from "@/components/shared/tag-input";
 import { generateAiMealPlanAction } from "@/lib/actions/ai-meal-plan";
 
+const BUDGET_PREFERENCE_OPTIONS = [
+  { value: "low", label: "Low" },
+  { value: "moderate", label: "Moderate" },
+  { value: "high", label: "High" },
+];
+
+const VARIETY_PREFERENCE_OPTIONS = [
+  { value: "low", label: "Low — more repeats ok" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High — maximize variety" },
+];
+
 export function GenerateWithAiDialog({
   planId,
   trigger,
@@ -102,7 +114,11 @@ export function GenerateWithAiDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Budget preference</Label>
-              <Select value={budgetPreference ?? ""} onValueChange={(v) => setBudgetPreference(v as typeof budgetPreference)}>
+              <Select
+                value={budgetPreference ?? ""}
+                onValueChange={(v) => setBudgetPreference(v as typeof budgetPreference)}
+                items={BUDGET_PREFERENCE_OPTIONS}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="No preference" />
                 </SelectTrigger>
@@ -115,7 +131,11 @@ export function GenerateWithAiDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Meal variety</Label>
-              <Select value={varietyPreference} onValueChange={(v) => v && setVarietyPreference(v as typeof varietyPreference)}>
+              <Select
+                value={varietyPreference}
+                onValueChange={(v) => v && setVarietyPreference(v as typeof varietyPreference)}
+                items={VARIETY_PREFERENCE_OPTIONS}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>

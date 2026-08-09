@@ -83,7 +83,11 @@ export function AllergyPicker({
               className="flex flex-wrap items-center gap-2.5 rounded-md bg-destructive/5 px-3 py-2"
             >
               <span className="text-sm font-medium text-foreground">{a.allergen}</span>
-              <Select value={a.severity} onValueChange={(v) => setSeverity(a.allergen, v as AllergyInput["severity"])}>
+              <Select
+                value={a.severity}
+                onValueChange={(v) => setSeverity(a.allergen, v as AllergyInput["severity"])}
+                items={ALLERGY_SEVERITIES}
+              >
                 <SelectTrigger size="sm" className="ml-auto w-36">
                   <SelectValue />
                 </SelectTrigger>

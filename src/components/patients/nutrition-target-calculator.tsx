@@ -14,6 +14,24 @@ import {
   type EnergyEstimateInput,
 } from "@/lib/services/nutrition/energy-calculator";
 
+const SEX_OPTIONS = [
+  { value: "female", label: "Female" },
+  { value: "male", label: "Male" },
+];
+
+const ACTIVITY_LEVEL_OPTIONS = [
+  { value: "sedentary", label: "Sedentary" },
+  { value: "lightly_active", label: "Lightly active" },
+  { value: "moderately_active", label: "Moderately active" },
+  { value: "very_active", label: "Very active" },
+  { value: "extra_active", label: "Extra active" },
+];
+
+const FORMULA_OPTIONS = [
+  { value: "mifflin_st_jeor", label: "Mifflin-St Jeor" },
+  { value: "harris_benedict", label: "Harris-Benedict (revised)" },
+];
+
 const ADJUSTMENT_OPTIONS = [
   { value: "-500", label: "Deficit for weight loss (-500 kcal/day, ~1 lb/week)" },
   { value: "-250", label: "Mild deficit (-250 kcal/day)" },
@@ -91,7 +109,7 @@ export function NutritionTargetCalculator({
           </div>
           <div className="space-y-1.5">
             <Label>Sex</Label>
-            <Select value={sex} onValueChange={(v) => setSex(v as "male" | "female")}>
+            <Select value={sex} onValueChange={(v) => setSex(v as "male" | "female")} items={SEX_OPTIONS}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -103,7 +121,11 @@ export function NutritionTargetCalculator({
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Activity level</Label>
-            <Select value={activityLevel} onValueChange={(v) => setActivityLevel(v as typeof activityLevel)}>
+            <Select
+              value={activityLevel}
+              onValueChange={(v) => setActivityLevel(v as typeof activityLevel)}
+              items={ACTIVITY_LEVEL_OPTIONS}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -121,7 +143,7 @@ export function NutritionTargetCalculator({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Formula</Label>
-            <Select value={formula} onValueChange={(v) => setFormula(v as EnergyFormula)}>
+            <Select value={formula} onValueChange={(v) => setFormula(v as EnergyFormula)} items={FORMULA_OPTIONS}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -133,7 +155,7 @@ export function NutritionTargetCalculator({
           </div>
           <div className="space-y-1.5">
             <Label>Goal adjustment</Label>
-            <Select value={adjustment} onValueChange={(v) => setAdjustment(v ?? "0")}>
+            <Select value={adjustment} onValueChange={(v) => setAdjustment(v ?? "0")} items={ADJUSTMENT_OPTIONS}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

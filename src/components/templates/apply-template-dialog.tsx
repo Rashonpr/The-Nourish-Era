@@ -46,7 +46,11 @@ export function ApplyTemplateDialog({
           <DialogTitle>Apply template</DialogTitle>
           <DialogDescription>Creates a new draft plan for the patient, which you can then adjust.</DialogDescription>
         </DialogHeader>
-        <Select value={patientId} onValueChange={(v) => v && setPatientId(v)}>
+        <Select
+          value={patientId}
+          onValueChange={(v) => v && setPatientId(v)}
+          items={patients.map((p) => ({ value: p.id, label: `${p.first_name} ${p.last_name}` }))}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Choose a patient…" />
           </SelectTrigger>

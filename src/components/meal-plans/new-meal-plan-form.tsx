@@ -51,7 +51,11 @@ export function NewMealPlanForm({ patients, defaultPatientId }: { patients: Pati
           <CardTitle>Select patient</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={patientId} onValueChange={(v) => v && handlePatientChange(v)}>
+          <Select
+            value={patientId}
+            onValueChange={(v) => v && handlePatientChange(v)}
+            items={patients.map((p) => ({ value: p.id, label: `${p.first_name} ${p.last_name}` }))}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Choose a patient…" />
             </SelectTrigger>

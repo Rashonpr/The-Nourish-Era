@@ -148,7 +148,7 @@ export function PatientForm({
                 control={control}
                 name="sex"
                 render={({ field }) => (
-                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange} items={SEX_OPTIONS}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select…" />
                     </SelectTrigger>
@@ -245,7 +245,7 @@ export function PatientForm({
               control={control}
               name="activityLevel"
               render={({ field }) => (
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange} items={ACTIVITY_LEVELS}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
@@ -403,7 +403,7 @@ export function PatientForm({
               control={control}
               name="cookingAbility"
               render={({ field }) => (
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange} items={COOKING_ABILITIES}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
@@ -428,7 +428,7 @@ export function PatientForm({
               control={control}
               name="budgetLevel"
               render={({ field }) => (
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange} items={BUDGET_LEVELS}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select…" />
                   </SelectTrigger>
