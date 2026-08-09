@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(winget install --id OpenJS.NodeJS.LTS -e --source winget --accept-source-agreements --accept-package-agreements)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/api/nutrition/search?q=chicken\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE:%{http_code}\\\\n\" \"http://localhost:3000/api/nutrition/search?q=chicken\")",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)"
+    ]
+  }
+}
