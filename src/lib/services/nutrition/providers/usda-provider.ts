@@ -2,6 +2,26 @@ import type { FoodDetails, FoodSearchResult, NutrientAmount, NutritionProvider }
 
 const BASE_URL = "https://api.nal.usda.gov/fdc/v1";
 
+// The USDA API intermittently returns a bare nginx 400 for an otherwise
+// valid, previously-successful request — retrying the identical request
+// immediately after almost always succeeds, so treat it as transient
+// rather than a real client error.
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 400;
+
+async function fetchWithRetry(url: URL, init?: RequestInit): Promise<Response> {
+  let lastResponse: Response | undefined;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const res = await fetch(url, init);
+    if (res.ok || res.status === 404) return res;
+    lastResponse = res;
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+    }
+  }
+  return lastResponse!;
+}
+
 // USDA search/detail responses use two slightly different nutrient shapes
 // depending on data type — normalize both defensively.
 type RawSearchNutrient = { nutrientId?: number; nutrientName?: string; unitName?: string; value?: number };
@@ -62,7 +82,7 @@ export class UsdaFoodDataCentralProvider implements NutritionProvider {
     url.searchParams.set("pageSize", String(limit));
     url.searchParams.set("dataType", "Foundation,SR Legacy,Survey (FNDDS),Branded");
 
-    const res = await fetch(url, { next: { revalidate: 60 * 60 * 24 } });
+    const res = await fetchWithRetry(url, { next: { revalidate: 60 * 60 * 24 } });
     if (!res.ok) {
       throw new Error(`USDA search failed (${res.status})`);
     }
@@ -76,7 +96,7 @@ export class UsdaFoodDataCentralProvider implements NutritionProvider {
     const url = new URL(`${BASE_URL}/food/${encodeURIComponent(externalId)}`);
     url.searchParams.set("api_key", this.apiKey);
 
-    const res = await fetch(url, { next: { revalidate: 60 * 60 * 24 * 7 } });
+    const res = await fetchWithRetry(url, { next: { revalidate: 60 * 60 * 24 * 7 } });
     if (res.status === 404) return null;
     if (!res.ok) {
       throw new Error(`USDA food lookup failed (${res.status})`);

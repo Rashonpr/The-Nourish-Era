@@ -52,7 +52,7 @@ export function calculateIngredientNutrition(
 export function sumNutrientTotals(totals: NutrientTotals[]): NutrientTotals {
   return totals.reduce(
     (acc, t) => ({
-      calories: acc.calories + t.calories,
+      calories: round(acc.calories + t.calories),
       proteinG: round(acc.proteinG + t.proteinG),
       carbsG: round(acc.carbsG + t.carbsG),
       fatG: round(acc.fatG + t.fatG),
