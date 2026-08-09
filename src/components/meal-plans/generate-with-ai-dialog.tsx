@@ -102,7 +102,7 @@ export function GenerateWithAiDialog({
             </div>
             <div className="space-y-1.5">
               <Label>Budget preference</Label>
-              <Select value={budgetPreference} onValueChange={(v) => setBudgetPreference(v as typeof budgetPreference)}>
+              <Select value={budgetPreference ?? ""} onValueChange={(v) => setBudgetPreference(v as typeof budgetPreference)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="No preference" />
                 </SelectTrigger>
