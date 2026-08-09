@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Loader2, Plus, Trash2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -195,7 +195,7 @@ export function ProgressPanel({
                     .sort((a, b) => b.entry_date.localeCompare(a.entry_date))
                     .map((entry) => (
                       <TableRow key={entry.id}>
-                        <TableCell>{format(new Date(entry.entry_date), "MMM d, yyyy")}</TableCell>
+                        <TableCell>{format(parseISO(entry.entry_date), "MMM d, yyyy")}</TableCell>
                         <TableCell>
                           {entry.weight_kg ? `${isImperial ? kgToLbs(entry.weight_kg) : entry.weight_kg} ${unitLabel}` : "—"}
                         </TableCell>

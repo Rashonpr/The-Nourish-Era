@@ -1,14 +1,14 @@
 "use client";
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 export type WeightPoint = { date: string; weight: number | null };
 
 export function ProgressChart({ points, unitLabel }: { points: WeightPoint[]; unitLabel: string }) {
   const data = points
     .filter((p): p is { date: string; weight: number } => p.weight !== null)
-    .map((p) => ({ ...p, label: format(new Date(p.date), "MMM d") }));
+    .map((p) => ({ ...p, label: format(parseISO(p.date), "MMM d") }));
 
   if (data.length === 0) {
     return <p className="py-8 text-center text-sm text-muted-foreground">No weight entries yet.</p>;

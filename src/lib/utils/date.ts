@@ -1,6 +1,8 @@
+import { parseISO } from "date-fns";
+
 export function calculateAge(dateOfBirth: string | null): number | null {
   if (!dateOfBirth) return null;
-  const dob = new Date(dateOfBirth);
+  const dob = parseISO(dateOfBirth);
   if (Number.isNaN(dob.getTime())) return null;
 
   const today = new Date();
